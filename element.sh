@@ -32,7 +32,7 @@ else
     # get the rest of the info
     name=$($PSQL "SELECT name FROM elements WHERE $input_type='$1'")
     symbol=$($PSQL "SELECT symbol FROM elements WHERE $input_type='$1'")
-    type=$($PSQL "SELECT type FROM elements INNER JOIN properties USING(atomic_number) WHERE $input_type='$1'")
+    type=$($PSQL "SELECT type FROM elements INNER JOIN properties USING(atomic_number) INNER JOIN types USING (type_id) WHERE $input_type='$1'")
     mass=$($PSQL "SELECT atomic_mass FROM elements INNER JOIN properties USING(atomic_number) WHERE $input_type='$1'")
     melting_point=$($PSQL "SELECT melting_point_celsius FROM elements INNER JOIN properties USING(atomic_number) WHERE $input_type='$1'")
     boiling_point=$($PSQL "SELECT boiling_point_celsius FROM elements INNER JOIN properties USING(atomic_number) WHERE $input_type='$1'")
