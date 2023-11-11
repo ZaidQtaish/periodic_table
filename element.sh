@@ -1,43 +1,49 @@
-# /bin/bash
-
+#!/bin/bash
 PSQL="psql --username=freecodecamp --dbname=periodic_table -t --no-align -c"
 
-if [[ -z $1 ]]; then
-  echo Please provide an element as an argument.
-else
-  # get input type
-  case $1 in
-    # if input is a number
-    [0-9]*)
-      input_type="atomic_number" ;;
-    # if input is a symbol
-    [A-Z][a-z])
-      input_type="symbol" ;;
-    [A-Z])
-      input_type="symbol" ;;
-    # if input is a word
-    [A-Z][a-z]*)
-      input_type="name" ;;
-    # if input is not any of the above
-    *)
-      # rerun script with no input
-      ./element.sh
-      exit 1 ;;
-  esac
-  # get atomic number
-  atomic_number=$($PSQL "SELECT atomic_number FROM elements WHERE $input_type='$1'")
-  # check if atomic number is in database
-  if [[ ! -z $atomic_number ]]; then
-    # get the rest of the info
-    name=$($PSQL "SELECT name FROM elements WHERE $input_type='$1'")
-    symbol=$($PSQL "SELECT symbol FROM elements WHERE $input_type='$1'")
-    type=$($PSQL "SELECT type FROM elements INNER JOIN properties USING(atomic_number) INNER JOIN types USING (type_id) WHERE $input_type='$1'")
-    mass=$($PSQL "SELECT atomic_mass FROM elements INNER JOIN properties USING(atomic_number) WHERE $input_type='$1'")
-    melting_point=$($PSQL "SELECT melting_point_celsius FROM elements INNER JOIN properties USING(atomic_number) WHERE $input_type='$1'")
-    boiling_point=$($PSQL "SELECT boiling_point_celsius FROM elements INNER JOIN properties USING(atomic_number) WHERE $input_type='$1'")
-    # print result
-    echo "The element with atomic number $atomic_number is $name ($symbol). It's a $type, with a mass of $mass amu. $name has a melting point of $melting_point celsius and a boiling point of $boiling_point celsius."
+# if no input
+if [[ -z $1 ]]
+then
+  echo -e "Please provide an element as an argument."
+elif [[ $1 ]]
+then
+  if [[ $1 =~ ^[0-9]+$ ]]
+  then
+    ATOMIC_NUMBER=$($PSQL "select atomic_number from elements where atomic_number=$1")
+    if [[ -z $ATOMIC_NUMBER ]]
+    then
+      echo -e "I could not find that element in the database." 
+    else
+      VAR=$($PSQL "select * from elements inner join properties using(atomic_number) inner join types using(type_id) where atomic_number=$1")
+      echo "$VAR" | while IFS='|' read TYPE_ID ATO_NUM SYMBOL NAME MASS MELTING BOILING TYPE
+      do
+        echo -e "The element with atomic number $ATO_NUM is $NAME ($SYMBOL). It's a $TYPE, with a mass of $MASS amu. $NAME has a melting point of $MELTING celsius and a boiling point of $BOILING celsius."
+      done
+    fi
+  elif [[ $1 =~ ^[A-Z][a-z]{0,2}$ ]]
+  then
+    SYMBOL=$($PSQL "select symbol from elements where symbol='$1'")
+    if [[ -z $SYMBOL ]]
+    then
+      echo -e "I could not find that element in the database."
+    else
+      VAR=$($PSQL "select * from elements inner join properties using(atomic_number) inner join types using(type_id) where symbol='$1'")
+      echo "$VAR" | while IFS='|' read TYPE_ID ATO_NUM SYMBOL NAME MASS MELTING BOILING TYPE
+      do
+        echo -e "The element with atomic number $ATO_NUM is $NAME ($SYMBOL). It's a $TYPE, with a mass of $MASS amu. $NAME has a melting point of $MELTING celsius and a boiling point of $BOILING celsius."
+      done
+    fi
   else
-    echo I could not find that element in the database.
+    NAME=$($PSQL "select name from elements where name='$1'")
+    if [[ -z $NAME ]]
+    then
+      echo -e "I could not find that element in the database."
+    else
+      VAR=$($PSQL "select * from elements inner join properties using(atomic_number) inner join types using(type_id) where name='$1'")
+      echo "$VAR" | while IFS='|' read TYPE_ID ATO_NUM SYMBOL NAME MASS MELTING BOILING TYPE
+      do
+        echo -e "The element with atomic number $ATO_NUM is $NAME ($SYMBOL). It's a $TYPE, with a mass of $MASS amu. $NAME has a melting point of $MELTING celsius and a boiling point of $BOILING celsius."
+      done
+    fi
   fi
 fi
