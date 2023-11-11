@@ -22,8 +22,7 @@ else
     *)
       # rerun script with no input
       ./element.sh
-      exit 1
-      ;;
+      exit 1 ;;
   esac
   # get atomic number
   atomic_number=$($PSQL "SELECT atomic_number FROM elements WHERE $input_type='$1'")
